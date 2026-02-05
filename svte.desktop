@@ -1,0 +1,32 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+
+# Application info
+Name=SVTE Terminal
+GenericName=Terminal Emulator
+Comment=Simple VTE-based terminal emulator for Wayland and X11
+Icon=svte
+
+# Execution
+Exec=svte
+Terminal=false
+StartupNotify=true
+StartupWMClass=svte
+
+# Categories for application menu
+Categories=System;TerminalEmulator;Utility;
+Keywords=terminal;shell;prompt;command;commandline;cmd;bash;zsh;console;
+
+# MIME types this application can handle
+MimeType=
+
+# Additional actions
+Actions=new-window;
+
+[Desktop Action new-window]
+Name=Open New Window
+Exec=svte
+
+# Additional metadata
+X-GNOME-UsesNotifications=false

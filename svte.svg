@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" version="1.1" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rounded rectangle - dark gruvbox bg -->
+  <rect x="8" y="8" width="112" height="112" rx="16" ry="16" fill="#282828"/>
+  
+  <!-- Inner terminal window -->
+  <rect x="12" y="12" width="104" height="104" rx="12" ry="12" fill="#1d2021"/>
+  
+  <!-- Terminal header bar -->
+  <rect x="12" y="12" width="104" height="24" rx="12" ry="12" fill="#3c3836"/>
+  <rect x="12" y="24" width="104" height="12" fill="#3c3836"/>
+  
+  <!-- Window control dots -->
+  <circle cx="24" cy="24" r="4" fill="#fb4934"/>
+  <circle cx="36" cy="24" r="4" fill="#fabd2f"/>
+  <circle cx="48" cy="24" r="4" fill="#b8bb26"/>
+  
+  <!-- Terminal text "SVTE" in gruvbox colors -->
+  <text x="20" y="60" font-family="monospace" font-size="20" font-weight="bold" fill="#b8bb26">$</text>
+  <text x="36" y="60" font-family="monospace" font-size="20" font-weight="bold" fill="#ebdbb2">svte</text>
+  
+  <!-- Cursor/prompt line -->
+  <rect x="20" y="68" width="12" height="3" fill="#fabd2f"/>
+  
+  <!-- Additional terminal lines for effect -->
+  <text x="20" y="82" font-family="monospace" font-size="12" fill="#928374">~/projects</text>
+  <rect x="20" y="86" width="60" height="2" fill="#504945" opacity="0.5"/>
+  
+  <text x="20" y="98" font-family="monospace" font-size="12" fill="#928374">simple & fast</text>
+  <rect x="20" y="102" width="45" height="2" fill="#504945" opacity="0.5"/>
+  
+  <!-- Accent corner detail -->
+  <path d="M 100 100 L 108 100 L 108 108 L 100 100" fill="#458588" opacity="0.3"/>
+  
+  <!-- Border highlight -->
+  <rect x="8" y="8" width="112" height="112" rx="16" ry="16" fill="none" stroke="#458588" stroke-width="2" opacity="0.4"/>
+</svg>
