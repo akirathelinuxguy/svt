@@ -1,160 +1,65 @@
 #!/bin/bash
-# SVTE uninstaller - removes all installed files
+# SVTE Terminal Emulator - Final Uninstaller
+set -euo pipefail
 
-set -e
+# --- Configuration ---
+BACKUP_DIR="/tmp/svte-backup-$(date +%Y%m%d-%H%M%S)"
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/svte"
+BINARY_PATHS=("/usr/local/bin/svte" "/usr/bin/svte" "$HOME/.local/bin/svte")
+DESKTOP_PATH="$HOME/.local/share/applications/svte.desktop"
 
-BOLD='\033[1m'
-GREEN='\033[0;32m'
+# Colors
 RED='\033[0;31m'
-YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
 BLUE='\033[0;34m'
-NC='\033[0m' # No Color
+BOLD='\033[1m'
+NC='\033[0m'
 
-echo -e "${BOLD}╔════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║   SVTE Terminal Emulator Uninstaller  ║${NC}"
-echo -e "${BOLD}╚════════════════════════════════════════╝${NC}\n"
+echo -e "${BOLD}SVTE Uninstaller v2.0${NC}\n"
 
-# Check if running as root
-if [ "$EUID" -eq 0 ]; then 
-    echo -e "${RED}Please do not run this script as root${NC}"
-    echo "Run as normal user, sudo will be used when needed"
-    exit 1
-fi
-
-# Check if svte is installed
-if ! command -v svte &> /dev/null; then
-    echo -e "${YELLOW}⚠ SVTE does not appear to be installed${NC}"
-    echo -e "\nSearching for installed files anyway...\n"
-fi
-
-# List files to be removed
-echo -e "${BOLD}The following files will be removed:${NC}\n"
-
-FILES_TO_REMOVE=(
-    "/usr/local/bin/svte"
-    "/usr/share/applications/svte.desktop"
-    "/usr/local/share/pixmaps/svte.svg"
-)
-
-FOUND_FILES=()
-
-for file in "${FILES_TO_REMOVE[@]}"; do
-    if [ -f "$file" ] || [ -L "$file" ]; then
-        echo -e "  ${RED}✗${NC} $file"
-        FOUND_FILES+=("$file")
-    else
-        echo -e "  ${BLUE}○${NC} $file ${BLUE}(not found)${NC}"
-    fi
-done
-
-if [ ${#FOUND_FILES[@]} -eq 0 ]; then
-    echo -e "\n${GREEN}No SVTE files found. Already uninstalled?${NC}\n"
-    exit 0
-fi
-
-# Confirmation
-echo -e "\n${YELLOW}${BOLD}Are you sure you want to uninstall SVTE? (y/n)${NC} "
-read -r response
-if [[ ! "$response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-    echo -e "${BLUE}Uninstall cancelled${NC}"
-    exit 0
-fi
-
-# Check for running instances
-echo -e "\n${BOLD}Checking for running instances...${NC}"
+# 1. Kill running instances to prevent file-locking issues
 if pgrep -x svte > /dev/null; then
-    echo -e "${YELLOW}⚠ SVTE is currently running${NC}"
-    echo -e "${YELLOW}Would you like to close all running instances? (y/n)${NC} "
-    read -r kill_response
-    if [[ "$kill_response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        pkill -x svte
-        echo -e "${GREEN}✓ Closed running instances${NC}"
-        sleep 1
-    else
-        echo -e "${YELLOW}⚠ Continuing with uninstall (some files may be in use)${NC}"
-    fi
-else
-    echo -e "${GREEN}✓ No running instances${NC}"
+    echo -e "${BLUE}ℹ Closing running SVTE instances...${NC}"
+    pkill -TERM svte || true
+    sleep 1
 fi
 
-# Remove files
-echo -e "\n${BOLD}Removing files...${NC}"
-
-for file in "${FOUND_FILES[@]}"; do
-    if sudo rm -f "$file" 2>/dev/null; then
-        echo -e "${GREEN}✓ Removed:${NC} $file"
+# 2. Backup Config (Fixed logic to prevent hanging)
+if [ -d "$CONFIG_DIR" ]; then
+    echo -e "${BLUE}ℹ Creating backup of configuration...${NC}"
+    mkdir -p "$BACKUP_DIR"
+    # Using cp -r on the direct path is fast and won't hang
+    if cp -r "$CONFIG_DIR" "$BACKUP_DIR/" 2>/dev/null; then
+        echo -e "${GREEN}✓ Backup saved to: $BACKUP_DIR${NC}"
     else
-        echo -e "${RED}✗ Failed to remove:${NC} $file"
+        echo -e "${RED}✗ Backup failed, skipping...${NC}"
+    fi
+fi
+
+# 3. Remove Binary
+echo -e "${BLUE}ℹ Removing binary files...${NC}"
+for path in "${BINARY_PATHS[@]}"; do
+    if [ -f "$path" ]; then
+        if [ -w "$path" ]; then
+            rm "$path" && echo -e "${GREEN}✓ Removed $path${NC}"
+        else
+            echo -e "${BLUE}ℹ Requesting sudo to remove $path${NC}"
+            sudo rm "$path" && echo -e "${GREEN}✓ Removed $path${NC}"
+        fi
     fi
 done
 
-# Update desktop database
-echo -e "\n${BOLD}Updating desktop database...${NC}"
-if command -v update-desktop-database &> /dev/null; then
-    sudo update-desktop-database /usr/share/applications 2>/dev/null || true
-    echo -e "${GREEN}✓ Desktop database updated${NC}"
-else
-    echo -e "${YELLOW}⚠ update-desktop-database not found (optional)${NC}"
+# 4. Remove Desktop Entry
+if [ -f "$DESKTOP_PATH" ]; then
+    rm "$DESKTOP_PATH"
+    echo -e "${GREEN}✓ Removed desktop entry${NC}"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
 fi
 
-# Clear icon cache
-if command -v gtk-update-icon-cache &> /dev/null; then
-    sudo gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
-    echo -e "${GREEN}✓ Icon cache updated${NC}"
+# 5. Remove Config
+if [ -d "$CONFIG_DIR" ]; then
+    rm -rf "$CONFIG_DIR"
+    echo -e "${GREEN}✓ Removed configuration directory${NC}"
 fi
 
-# Verify uninstallation
-echo -e "\n${BOLD}Verifying uninstallation...${NC}"
-if command -v svte &> /dev/null; then
-    echo -e "${YELLOW}⚠ SVTE still found in PATH${NC}"
-    REMAINING_PATH=$(which svte)
-    echo -e "  Found at: ${BLUE}$REMAINING_PATH${NC}"
-    echo -e "  ${YELLOW}You may need to remove this manually${NC}"
-else
-    echo -e "${GREEN}✓ SVTE removed from system${NC}"
-fi
-
-# Check for config files in home directory
-echo -e "\n${BOLD}Checking for user configuration...${NC}"
-CONFIG_DIRS=(
-    "$HOME/.config/svte"
-    "$HOME/.local/share/svte"
-)
-
-FOUND_CONFIG=false
-for dir in "${CONFIG_DIRS[@]}"; do
-    if [ -d "$dir" ]; then
-        echo -e "${BLUE}Found config directory:${NC} $dir"
-        FOUND_CONFIG=true
-    fi
-done
-
-if [ "$FOUND_CONFIG" = true ]; then
-    echo -e "\n${YELLOW}Would you like to remove user configuration too? (y/n)${NC} "
-    read -r config_response
-    if [[ "$config_response" =~ ^([yY][eE][sS]|[yY])$ ]]; then
-        for dir in "${CONFIG_DIRS[@]}"; do
-            if [ -d "$dir" ]; then
-                rm -rf "$dir"
-                echo -e "${GREEN}✓ Removed:${NC} $dir"
-            fi
-        done
-    else
-        echo -e "${BLUE}Keeping user configuration${NC}"
-    fi
-else
-    echo -e "${GREEN}✓ No user configuration found${NC}"
-fi
-
-# Success message
-echo -e "\n${GREEN}${BOLD}╔════════════════════════════════════════╗${NC}"
-echo -e "${GREEN}${BOLD}║    Uninstallation successful! 👋       ║${NC}"
-echo -e "${GREEN}${BOLD}╚════════════════════════════════════════╝${NC}\n"
-
-echo -e "${BOLD}What was removed:${NC}"
-for file in "${FOUND_FILES[@]}"; do
-    echo -e "  ${GREEN}✓${NC} $file"
-done
-
-echo -e "\n${BOLD}Thank you for using SVTE!${NC}"
-echo -e "If you want to reinstall, run: ${BLUE}./install.sh${NC}\n"
+echo -e "\n${BOLD}${GREEN}Uninstallation Complete!${NC}"

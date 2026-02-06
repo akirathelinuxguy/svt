@@ -1,6 +1,6 @@
 # SVTE - Simple VTE Terminal Emulator
 
-A lightweight terminal emulator that just works. It runs on both Wayland and X11, supports tabs, and looks good with a dark Gruvbox color scheme.
+A lightweight terminal emulator that just works. It runs on both Wayland and X11, supports tabs, and looks good with a dark Gruvbox ( the only real theme ) color scheme.
 
 ## What is this?
 
@@ -148,13 +148,6 @@ make test
 
 This runs a self-test that checks if your GTK and VTE versions are good, if colors work, and so on.
 
-## Command Line Options
-
-```bash
-svte --help       # Shows help
-svte --version    # Shows version
-svte --test       # Runs self-test
-```
 
 ## What You Need
 
@@ -239,7 +232,7 @@ Found a bug? Want to add a feature? Pull requests are welcome. This is a simple 
 
 ## License
 
-Do whatever you want with this code. It's basically a minimal example of how to use VTE, so use it, learn from it, fork it, whatever.
+GPLv2
 
 ## Credits
 

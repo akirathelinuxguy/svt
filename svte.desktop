@@ -6,7 +6,7 @@ Type=Application
 Name=SVTE Terminal
 GenericName=Terminal Emulator
 Comment=Simple VTE-based terminal emulator for Wayland and X11
-Icon=svte
+Icon=/usr/share/pixmaps/svte.svg
 
 # Execution
 Exec=svte
